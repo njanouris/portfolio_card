@@ -90,6 +90,7 @@
             height: 100%;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+            -moz-backface-visibility: hidden;
             border-radius: 20px;
             box-shadow: 
                 0 10px 40px rgba(0, 0, 0, 0.3),
@@ -104,6 +105,17 @@
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #6366f1 100%);
             background-size: 200% 200%;
             animation: gradientShift 3s ease infinite;
+            z-index: 2;
+        }
+
+        .card.flipped .card-front {
+            visibility: hidden;
+            opacity: 0;
+        }
+
+        .card:not(.flipped) .card-back {
+            visibility: hidden;
+            opacity: 0;
         }
 
         @keyframes gradientShift {
