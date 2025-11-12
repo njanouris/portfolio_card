@@ -217,16 +217,21 @@
             font-weight: 600;
         }
 
+        .portfolio-links-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
         .portfolio-link {
             background: rgba(255, 255, 255, 0.2);
             border: none;
             color: white;
             padding: 8px 10px;
-            margin-bottom: 6px;
             border-radius: 8px;
             cursor: pointer;
             width: 100%;
-            text-align: left;
+            text-align: center;
             transition: all 0.3s;
             font-size: 12px;
             display: block;
@@ -423,7 +428,6 @@
                 width: 120px;
                 height: 145px;
                 margin-top: -70px;
-                
             }
 
             .card-back {
@@ -500,14 +504,13 @@
                     <div>
                         <div class="portfolio-links">
                             <h3>PORTFOLIO</h3>
-                            <button class="portfolio-link" onclick="viewItem(event, 0)">E-Commerce Platform</button>
-                            <button class="portfolio-link" onclick="viewItem(event, 1)">AWS Solutions Architect</button>
+                            <div class="portfolio-links-grid">
+                                <button class="portfolio-link" onclick="openLink(event, 'cert')">Certifications</button>
+                                <button class="portfolio-link" onclick="openLink(event, 'edu')">Education</button>
+                                <button class="portfolio-link" onclick="openLink(event, 'proj')">Projects</button>
+                                <button class="portfolio-link" onclick="openLink(event, 'ref')">References</button>
+                            </div>
                         </div>
-                        
-                        <!-- <div class="flip-hint">
-                            Tap to flip back
-                        </div> -->
-                        
                     </div>
                 </div>
 
@@ -571,6 +574,28 @@
                 <input type="text" id="linkedinInput" value="https://linkedin.com/in/johndoe" placeholder="https://linkedin.com/in/yourname">
             </div>
 
+            <div class="section-title">PORTFOLIO LINKS</div>
+
+            <div class="form-group">
+                <label>Certifications Page URL</label>
+                <input type="text" id="certPageInput" value="" placeholder="https://example.com/certifications">
+            </div>
+
+            <div class="form-group">
+                <label>Education Page URL</label>
+                <input type="text" id="eduPageInput" value="" placeholder="https://example.com/education">
+            </div>
+
+            <div class="form-group">
+                <label>Projects Page URL</label>
+                <input type="text" id="projPageInput" value="" placeholder="https://example.com/projects">
+            </div>
+
+            <div class="form-group">
+                <label>References Page URL</label>
+                <input type="text" id="refPageInput" value="" placeholder="https://example.com/references">
+            </div>
+
             <div class="section-title">CUSTOMIZATION</div>
 
             <div class="form-group">
@@ -627,6 +652,20 @@
             const cardColor = document.getElementById('cardColorInput').value;
             const bgColor = document.getElementById('bgColorInput').value;
 
+            // Get portfolio links
+            const certPage = document.getElementById('certPageInput').value;
+            const eduPage = document.getElementById('eduPageInput').value;
+            const projPage = document.getElementById('projPageInput').value;
+            const refPage = document.getElementById('refPageInput').value;
+
+            // Store them globally so openLink can use them
+            window.portfolioLinks = {
+                cert: certPage,
+                edu: eduPage,
+                proj: projPage,
+                ref: refPage
+            };
+
             document.getElementById('fullName').textContent = `${firstName} ${lastName}`;
             document.getElementById('emailText').textContent = email;
             document.getElementById('phoneText').textContent = phone;
@@ -657,6 +696,15 @@
             closeSettings();
         }
 
+        function openLink(event, type) {
+            event.stopPropagation();
+            if (window.portfolioLinks && window.portfolioLinks[type]) {
+                window.open(window.portfolioLinks[type], '_blank');
+            } else {
+                alert('Please add this link in Settings');
+            }
+        }
+
         document.getElementById('profilePicInput').addEventListener('change', function(e) {
             if (e.target.files && e.target.files[0]) {
                 const reader = new FileReader();
@@ -682,15 +730,6 @@
         document.getElementById('bgColorInput').addEventListener('input', (e) => {
             document.getElementById('bgColorPicker').value = e.target.value;
         });
-
-        function viewItem(event, index) {
-            event.stopPropagation();
-            const items = [
-                'E-Commerce Platform: Redesigned shopping platform with 45% conversion boost',
-                'AWS Solutions Architect: Cloud architecture certification'
-            ];
-            alert(items[index]);
-        }
 
         const cardContainer = document.querySelector('.card-container');
 
