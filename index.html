@@ -816,7 +816,9 @@
                 <div class="left-content">
                     <div>
                         <div class="contact-info">
-                            <h2 id="fullName">John Doe</h2>
+                            <a href="https://linkedin.com/in/johndoe" id="nameLink" target="_blank" style="color: white; text-decoration: none;">
+                                <h2 id="fullName">John Doe</h2>
+                            </a>
                         </div>
 
                         <div class="contact-detail">
@@ -824,13 +826,17 @@
                                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                                 <polyline points="22,6 12,13 2,6"></polyline>
                             </svg>
-                            <span id="emailText">john.doe@email.com</span>
+                            <a href="mailto:john.doe@email.com" id="emailLink" style="color: white; text-decoration: none;">
+                                <span id="emailText">john.doe@email.com</span>
+                            </a>
                         </div>
                         <div class="contact-detail">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                             </svg>
-                            <span id="phoneText">(555) 123-4567</span>
+                            <a href="tel:(555) 123-4567" id="phoneLink" style="color: white; text-decoration: none;">
+                                <span id="phoneText">(555) 123-4567</span>
+                            </a>
                         </div>
                         <div class="contact-detail">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1292,12 +1298,18 @@
 
         function applyCardData(cardData) {
             document.getElementById('fullName').textContent = `${cardData.firstName} ${cardData.lastName}`;
-            document.getElementById('emailText').textContent = cardData.email;
-            document.getElementById('phoneText').textContent = cardData.phone;
-            
+            const nameLink = document.getElementById('nameLink');
+            nameLink.href = cardData.linkedin;
+
             const linkedinLink = document.getElementById('linkedinLink');
             linkedinLink.href = cardData.linkedin;
             linkedinLink.textContent = cardData.linkedin.replace('https://', '').replace('http://', '');
+            document.getElementById('emailText').textContent = cardData.email;
+            const emailLink = document.getElementById('emailLink');
+            emailLink.href = 'mailto:' + cardData.email;
+            document.getElementById('phoneText').textContent = cardData.phone;
+            const phoneLink = document.getElementById('phoneLink');
+            phoneLink.href = 'tel:' + cardData.phone;
 
             document.getElementById('profilePic').src = cardData.profilePic;
             document.getElementById('profilePicSmall').src = cardData.profilePic;
