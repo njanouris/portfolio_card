@@ -567,32 +567,6 @@
             line-height: 1.6;
         }
 
-        .share-link {
-            background: #f3f4f6;
-            padding: 12px;
-            border-radius: 8px;
-            word-break: break-all;
-            font-size: 13px;
-            margin: 20px 0;
-            font-family: monospace;
-        }
-
-        .copy-btn {
-            background: #6366f1;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            margin-top: 20px;
-        }
-
-        .copy-btn:hover {
-            background: #4f46e5;
-        }
-
         /* Settings Panel */
         .settings-content {
             max-width: 600px;
@@ -918,10 +892,6 @@
             <div class="qr-code-container">
                 <div id="qrcode"></div>
             </div>
-            
-            <h3 style="margin: 30px 0 10px;">Or Share Link</h3>
-            <div class="share-link" id="shareLink"></div>
-            <button class="copy-btn" onclick="copyLink()">Copy Link</button>
         </div>
     </div>
 
@@ -1019,13 +989,11 @@
         </div>
     </div>
 
-    <!-- QR Code Library -->
-    </script>
-
     <script>
         let isFlipped = false;
         let viewingSharedCard = false;
         let sharedCardData = null;
+        let uploadedImageData = null;
 
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', () => {
@@ -1292,6 +1260,10 @@
 
             localStorage.setItem('myCard', JSON.stringify(cardData));
             applyCardData(cardData);
+            
+            // Reset the uploaded image data after saving
+            uploadedImageData = null;
+            
             closeSettings();
             alert('Your card has been saved!');
         }
@@ -1304,9 +1276,11 @@
             const linkedinLink = document.getElementById('linkedinLink');
             linkedinLink.href = cardData.linkedin;
             linkedinLink.textContent = cardData.linkedin.replace('https://', '').replace('http://', '');
+            
             document.getElementById('emailText').textContent = cardData.email;
             const emailLink = document.getElementById('emailLink');
             emailLink.href = 'mailto:' + cardData.email;
+            
             document.getElementById('phoneText').textContent = cardData.phone;
             const phoneLink = document.getElementById('phoneLink');
             phoneLink.href = 'tel:' + cardData.phone;
@@ -1345,34 +1319,31 @@
 
             const cardData = btoa(myCard);
             const shareUrl = window.location.origin + window.location.pathname + '?card=' + cardData;
-    
-            document.getElementById('shareLink').textContent = shareUrl;
-    
+
             const qrcodeDiv = document.getElementById('qrcode');
-            qrcodeDiv.innerHTML = '';
-    
+            qrcodeDiv.innerHTML = 'Loading QR Code...';
+
+            // Try multiple QR code services for better reliability
             const qrImage = document.createElement('img');
-            qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(shareUrl)}`;
+            
+            // Using Google Charts API - more reliable
+            qrImage.src = `https://chart.googleapis.com/chart?cht=qr&chs=256x256&chl=${encodeURIComponent(shareUrl)}`;
             qrImage.alt = 'QR Code';
             qrImage.style.maxWidth = '100%';
             qrImage.style.height = 'auto';
-    
-            qrImage.onerror = function() {
-                qrcodeDiv.innerHTML = '<p style="color: #6b7280; padding: 20px;">QR Code could not be generated. Please use the link below instead.</p>';
-            };
-    
-            qrcodeDiv.appendChild(qrImage);
-        }
 
-        function copyLink() {
-            const link = document.getElementById('shareLink').textContent;
-            navigator.clipboard.writeText(link).then(() => {
-                const btn = event.target;
-                btn.textContent = 'Copied!';
-                setTimeout(() => {
-                    btn.textContent = 'Copy Link';
-                }, 2000);
-            });
+            qrImage.onload = function() {
+                qrcodeDiv.innerHTML = '';
+                qrcodeDiv.appendChild(qrImage);
+            };
+
+            qrImage.onerror = function() {
+                // Fallback to alternative API
+                qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(shareUrl)}`;
+                qrImage.onerror = function() {
+                    qrcodeDiv.innerHTML = '<p style="color: #6b7280; padding: 20px;">QR Code could not be generated. Please check your internet connection and try again.</p>';
+                };
+            };
         }
 
         function openLink(event, type) {
@@ -1384,16 +1355,14 @@
             }
         }
 
-        let uploadedImageData = null; 
-
         document.getElementById('profilePicInput').addEventListener('change', function(e) {
             if (e.target.files && e.target.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    uploadedImageData = event.target.result;  
+                    uploadedImageData = event.target.result;
                     document.getElementById('previewPic').src = uploadedImageData;
-                    document.getElementById('profilePic').src = uploadedImageData; 
-                    document.getElementById('profilePicSmall').src = uploadedImageData; 
+                    document.getElementById('profilePic').src = uploadedImageData;
+                    document.getElementById('profilePicSmall').src = uploadedImageData;
                 };
                 reader.readAsDataURL(e.target.files[0]);
             }
