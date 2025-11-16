@@ -745,6 +745,17 @@ padding: 20px;
 }
 }
 
+.email-error-box {
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 6px;
+  display: none;
+  line-height: 1.4;
+}
+
 /* Adjustments for smaller phones in portrait */
 @media (max-width: 400px) and (orientation: portrait) {
 .card-container {
@@ -801,6 +812,7 @@ height: 220px;
 width: 135px;
 height: 135px;
 }
+
 }
 </style>
 </head>
@@ -1010,6 +1022,7 @@ style="padding: 8px; border: 1px solid #d1d5db; border-radius: 8px; width: 100%;
 <div class="form-group">
 <label>Email</label>
 <input type="email" id="emailInput" value="john.doe@email.com">
+<div class="email-error-box" id="emailErrorBox">
 </div>
 
 <div class="form-group">
@@ -1344,11 +1357,152 @@ function contrastColor(hex){
   return yiq>=128 ? '#111827' : '#ffffff';
 }
 
+//Code which handles parameters around first and last name. Helps with trimming spaces on the front and back end of field. Helps with correct captialization of names (including particles of names being lowercased, also includes first particle in the list being lowercased when first and last name is concatenated). There are some character limits on what can be put in the name text boxes (only A-Z, a-z, ', -). Length limit for First and Last name being between 1 and 30). User CANNOT input restricted characters into the text boxes, but code is implemented just in case they paste invalid characters in.
+setTimeout(() => {
+  const first = document.getElementById("firstNameInput");
+  const last = document.getElementById("lastNameInput");
+//First letter gets capitalized, no spaces allowed in first name. only A-Z, a-z, ', - allowed, everything else is removed while typing (spaces, punctuation, numbers, etc)
+  if (first) {
+    first.addEventListener("input", () => {
+      let v = first.value;
+      v = v.replace(/[^A-Za-z'-]/g, "");
+      first.value = v;
+    });
+  }
+//Lastname is capitalized and can have spaces and multiple parts. Same validation as first name but spaces are allowed.
+  if (last) {
+    last.addEventListener("input", () => {
+      let v = last.value;
+      v = v.replace(/[^A-Za-z' -]/g, "");
+      last.value = v;
+    });
+  }
+}, 300);
+
+//formats name based on rules specified above with the exception for name particles. Trims spaces if entered. Handles spaces in last name properly. Returns null if name is invalid.
+function formatName(name, isLastName = false) {
+  name = name.trim();
+  if (isLastName) name = name.replace(/\s+/g, " ");
+  else name = name.replace(/\s+/g, "");
+
+  const allowedRegex = isLastName
+    ? /^[A-Za-z' -]+$/
+    : /^[A-Za-z'-]+$/;
+
+  if (!allowedRegex.test(name)) return null;
+  if (name.length < 1 || name.length > 30) return null;
+
+  // List of particles to remain lowercase
+  const particles = [
+    "de","del","la","las","los", "da","das","dos", "van","von","der","den","le","du","di"
+  ];
+  //returns captitalized name unless it is a particle from the list above
+  function cap(word) {
+    const lower = word.toLowerCase();
+    if (particles.includes(lower)) return lower;
+
+  // Handle hyphenated and apostrophed names with capitalization on both sides of the name
+    if (lower.includes("-")) {
+      return lower.split("-").map(w =>
+        w.charAt(0).toUpperCase() + w.slice(1)
+      ).join("-");
+    }
+
+    if (lower.includes("'")) {
+      return lower.split("'").map(w =>
+        w.charAt(0).toUpperCase() + w.slice(1)
+      ).join("'");
+    }
+
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }
+
+  const parts = isLastName ? name.split(" ") : [name];
+  return parts.map(cap).join(" ");
+}
+
+//Restricts what can be typed into the email field in real-time
+//Some of this may be redundant with the error checking below, but is included just in case user pastes invalid email in.
+document.getElementById("emailInput").addEventListener("input", function (e) {
+  let v = e.target.value.toLowerCase(); //makes all input lowercase
+  v = v.replace(/[^a-z0-9@._-]/g, ""); //removes invalid characters (not allowed: spaces, commas, exclamation points, etc)
+  v = v.replace(/\s+/g, ""); //removes spaces in the entire email
+  const a = v.indexOf("@"); //finds the @ symbol, splits email into local and domain parts if it exists
+  if (v.includes("@")) { //runs domain logic if there is an @ symbol present
+    let local = v.slice(0, a); //local part of email
+    let domain = v.slice(a + 1).replace(/[0-9]/g, ""); //domain part of email with numbers removed if they are somehow present
+    v = local + "@" + domain; //reconstructs email without numbers in domain if any were present
+  }
+  e.target.value = v; 
+});
+
+function getEmailErrors(email) {
+  let e = email.trim().toLowerCase(); //Not redundant (please do not remove). Trim spaces from pasting/clipboard and make lowercase if user pastes it in somehow.
+  let errors = [];
+
+  //What will be displayed in the email error box if any of these errors are present
+  if (e.length < 5 || e.length > 80) errors.push("Email length must be between 5–80 characters.");
+
+  const atCount = (e.match(/@/g) || []).length;
+  if (atCount !== 1) errors.push("Must contain exactly one '@'symbol.");
+
+  if (e.includes("..")) errors.push("Email cannot contain consecutive dots.");
+  if (e.startsWith(".")) errors.push("Email cannot start with a dot.");
+  if (e.endsWith(".")) errors.push("Email cannot end with a dot.");
+  if (e.startsWith("-")) errors.push("Email cannot start with a dash.");
+
+  //checks for only 1 @ symbol to split local and domain parts
+  if (atCount === 1) {
+    const parts = e.split("@");
+    const local = parts[0];
+    const domain = parts[1];
+
+    //Any issues with mistyping domains. Any inputs that can be used to create invalid email structure within a domain is shown in a box and the specific error(s) are shown. Some of these are redundant due to real-time input restrictions, but are included just in case user pastes invalid email in.
+    if (!local.length) errors.push("Missing text before '@'.");
+    if (!domain.includes(".")) errors.push("Domain must contain a dot.");
+    if (domain.includes("..")) errors.push("Domain cannot contain consecutive dots.");
+    if (domain.startsWith(".")) errors.push("Domain cannot start with a dot.");
+    if (domain.endsWith(".")) errors.push("Domain cannot end with a dot.");
+    if (/[0-9]/.test(domain)) errors.push("Domain cannot contain numbers.");
+
+    let tld = domain.split(".").pop();
+    if (tld.length < 2) errors.push("Top-level domain must be at least 2 letters.");
+  }
+
+  return errors;
+}
+
+//Display to user what email errors are present in real-time as they type
+const emailInput = document.getElementById("emailInput");
+const emailErrorBox = document.getElementById("emailErrorBox");
+
+emailInput.addEventListener("input", () => {
+  let v = emailInput.value.trim().toLowerCase();
+  let errors = getEmailErrors(v);
+
+  if (errors.length === 0) {
+    emailErrorBox.style.display = "none";
+    emailErrorBox.innerHTML = "";
+  } else {
+    emailErrorBox.style.display = "block";
+    emailErrorBox.innerHTML = "⚠ Email is invalid:<br>• " + errors.join("<br>• ");
+  }
+});
 
 function saveSettings() {
-  const firstName = document.getElementById('firstNameInput').value;
-  const lastName = document.getElementById('lastNameInput').value;
-  const email = document.getElementById('emailInput').value;
+  let firstName = formatName(document.getElementById('firstNameInput').value, false);
+  let lastName = formatName(document.getElementById('lastNameInput').value, true);
+
+  if (!firstName) { alert("Invalid first name."); return; }
+  if (!lastName) { alert("Invalid last name."); return; }
+
+  let emailErrors = getEmailErrors(document.getElementById('emailInput').value);
+  if (emailErrors.length > 0) {
+    alert("Email invalid:\n- " + emailErrors.join("\n- "));
+    return;
+  }
+
+  let email = document.getElementById('emailInput').value.trim().toLowerCase();
   const phone = document.getElementById('phoneInput').value;
   const linkedin = document.getElementById('linkedinInput').value;
   const jobTitle = document.getElementById('jobTitleInput').value;
@@ -1358,6 +1512,7 @@ function saveSettings() {
     document.getElementById('cardColorPicker').value,
     '#6366f1'
   );
+
   const bgColor = pickColor(
     document.getElementById('bgColorInput').value,
     document.getElementById('bgColorPicker').value,
@@ -1381,14 +1536,21 @@ function saveSettings() {
     cardColor,
     bgColor,
     profilePic: profilePicData,
-    portfolioLinks: { cert: certPage, edu: eduPage, proj: projPage, ref: refPage },
+    portfolioLinks: {
+      cert: certPage,
+      edu: eduPage,
+      proj: projPage,
+      ref: refPage
+    },
     lastUpdated: new Date().toISOString()
   };
 
   localStorage.setItem('myCard', JSON.stringify(cardData));
+
   applyCardData(cardData);
   loadMyCardSection();
   uploadedImageData = null;
+
   closeSettings();
   alert('Your card has been saved!');
 }
