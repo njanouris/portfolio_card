@@ -1332,6 +1332,9 @@
        ========================================================== */
     function openLink(event, type) {
       console.log('📱 openLink called with type:', type);
+      console.log('🔍 Full window.portfolioLinks object:', JSON.stringify(window.portfolioLinks));
+      console.log('🔍 Specific URL for type "' + type + '":', window.portfolioLinks ? window.portfolioLinks[type] : 'undefined');
+
       event.stopPropagation();
 
       const linkMap = {
@@ -1341,11 +1344,19 @@
         ref: 'References'
       };
 
-      console.log('🔗 window.portfolioLinks:', window.portfolioLinks);
+      // Check if URL exists and is not empty
+      const url = window.portfolioLinks && window.portfolioLinks[type] ? window.portfolioLinks[type].trim() : '';
 
-      if (window.portfolioLinks && window.portfolioLinks[type] && window.portfolioLinks[type].trim()) {
-        console.log('✅ Opening URL:', window.portfolioLinks[type]);
-        window.open(window.portfolioLinks[type], '_blank');
+      console.log('🎯 Final URL to open:', url);
+
+      if (url) {
+        console.log('✅ Opening URL in new tab:', url);
+        const newWindow = window.open(url, '_blank');
+        if (!newWindow) {
+          alert('Pop-up blocked! Please allow pop-ups for this site.');
+        } else {
+          console.log('✅ New window opened successfully');
+        }
       } else {
         const itemName = linkMap[type] || 'This item';
         console.log('⚠️ No URL set for:', itemName);
