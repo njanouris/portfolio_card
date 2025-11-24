@@ -1327,6 +1327,37 @@
       }
     }
 
+    /* ==========================================================
+       PORTFOLIO LINK HANDLER (for inline onclick in HTML)
+       ========================================================== */
+    function openLink(event, type) {
+      console.log('📱 openLink called with type:', type);
+      event.stopPropagation();
+
+      const linkMap = {
+        cert: 'Certifications',
+        edu: 'Education',
+        proj: 'Projects',
+        ref: 'References'
+      };
+
+      console.log('🔗 window.portfolioLinks:', window.portfolioLinks);
+
+      if (window.portfolioLinks && window.portfolioLinks[type] && window.portfolioLinks[type].trim()) {
+        console.log('✅ Opening URL:', window.portfolioLinks[type]);
+        window.open(window.portfolioLinks[type], '_blank');
+      } else {
+        const itemName = linkMap[type] || 'This item';
+        console.log('⚠️ No URL set for:', itemName);
+
+        if (viewingSharedCard) {
+          alert(`No ${itemName} link available for this contact.`);
+        } else {
+          alert(`No link set for ${itemName}.\n\nAdd a URL in Settings to link to your portfolio.`);
+        }
+      }
+    }
+
 
     /* ==========================================================
        PANELS: Home / Share / Settings (open/close)
@@ -2022,30 +2053,7 @@ function parsePrettyPhone10(p) {
     })();
 
 
-    /* ==========================================================
-       PORTFOLIO BUTTONS (open link if set)
-       ========================================================== */
-
-    function openLink(event, type) {
-      event.stopPropagation();
-
-      const linkMap = {
-        cert: 'Certifications',
-        edu: 'Education',
-        proj: 'Projects',
-        ref: 'References'
-      };
-
-      if (window.portfolioLinks && window.portfolioLinks[type] && window.portfolioLinks[type].trim()) {
-        window.open(window.portfolioLinks[type], '_blank');
-      } else {
-        const itemName = linkMap[type] || 'This item';
-        alert(`No link set for ${itemName}. Add a URL in Settings to link to your portfolio.`);
-      }
-    }
-
-
-    /* ==========================================================
+        /* ==========================================================
        UPLOAD HANDLER (photo)
        ========================================================== */
 
@@ -2263,7 +2271,9 @@ function parsePrettyPhone10(p) {
       }
 
       function renderPortfolioSection(cardData) {
+        console.log('🔍 renderPortfolioSection called with cardData:', cardData);
         const vis = cardData.portfolioVisibility || { cert: true, edu: true, proj: true, ref: true };
+        console.log('📋 Visibility settings:', vis);
 
         // Build only the visible buttons
         const items = [];
@@ -2271,9 +2281,14 @@ function parsePrettyPhone10(p) {
         if (vis.edu !== false) items.push('<button class="portfolio-link" data-link-type="edu">Education</button>');
         if (vis.proj !== false) items.push('<button class="portfolio-link" data-link-type="proj">Projects</button>');
         if (vis.ref !== false) items.push('<button class="portfolio-link" data-link-type="ref">References</button>');
+        console.log('🔘 Built items array, count:', items.length);
 
         const portfolioSection = document.querySelector('.portfolio-links');
-        if (!portfolioSection) return;
+        console.log('🎯 portfolioSection element:', portfolioSection);
+        if (!portfolioSection) {
+          console.error('❌ portfolioSection not found!');
+          return;
+        }
 
         // Hide entire section if no items selected
         if (items.length === 0) {
@@ -2317,13 +2332,23 @@ function parsePrettyPhone10(p) {
             ${gridHtml}
           </div>
         `;
+        console.log('✅ Portfolio HTML rendered');
 
         // Add event listeners to all portfolio buttons
-        portfolioSection.querySelectorAll('.portfolio-link').forEach(button => {
+        const buttons = portfolioSection.querySelectorAll('.portfolio-link');
+        console.log('🔘 Found buttons after render:', buttons.length);
+        console.log('🔗 window.portfolioLinks:', window.portfolioLinks);
+
+        buttons.forEach((button, index) => {
+          console.log(`🔧 Attaching listener to button ${index}:`, button.getAttribute('data-link-type'));
           button.addEventListener('click', function(event) {
+            console.log('🖱️ CLICK DETECTED! Button clicked:', this.getAttribute('data-link-type'));
+            alert('CLICK HANDLER FIRED! Type: ' + this.getAttribute('data-link-type'));
+
             event.stopPropagation();
             const type = this.getAttribute('data-link-type');
-          
+            console.log('📍 Click type:', type);
+
             const linkMap = {
               cert: 'Certifications',
               edu: 'Education',
@@ -2331,16 +2356,26 @@ function parsePrettyPhone10(p) {
               ref: 'References'
             };
 
+            console.log('🔍 Checking window.portfolioLinks[' + type + ']:', window.portfolioLinks ? window.portfolioLinks[type] : 'portfolioLinks not set');
+
             if (window.portfolioLinks && window.portfolioLinks[type] && window.portfolioLinks[type].trim()) {
+              console.log('✅ Opening URL:', window.portfolioLinks[type]);
               window.open(window.portfolioLinks[type], '_blank');
             } else {
               const itemName = linkMap[type] || 'This item';
-              alert(`No link set for ${itemName}. Add a URL in Settings to link to your portfolio.`);
+              console.log('⚠️ No URL set for:', itemName);
+
+              // Different message for viewing your own card vs. someone else's
+              if (viewingSharedCard) {
+                alert(`No ${itemName} link available for this contact.`);
+              } else {
+                alert(`No link set for ${itemName}.\n\nAdd a URL in Settings to link to your portfolio.`);
+              }
             }
           });
         });
+        console.log('🎉 All event listeners attached successfully');
       }
-
     /* ==========================================================
        RESET to John Doe (clear local data, remove ?card=)
        ========================================================== */
